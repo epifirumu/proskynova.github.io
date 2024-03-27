@@ -99,6 +99,14 @@ Signed-off-by: Someone <someone@example.com>
 
 或其他不应放在 Header 和 Body 部分的内容。
 
+##### 特殊标签
+
+以下标签具有特殊效果，且应放置在 Footer 部分：
+
+- `[skip ci]`：跳过 CI 构建
+
+- `[skip release]`：跳过发布 Release
+
 #### <a name="revert"></a>Revert
 
 Revert 提交的 Header 部分应以 `revert: ` 开头，后接被 revert 的提交的 Header，其 Body 部分应有 `This reverts commit <hash>.`，`<hash>` 是被 revert 的提交的 SHA，可以附加 revert 的理由。

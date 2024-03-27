@@ -4,6 +4,7 @@
     "vitepress-plugin-image-viewer": "^1.1.2"
   },
   "devDependencies": {
+    "@saithodev/semantic-release-backmerge": "^4.0.1",
     "conventional-changelog-conventionalcommits": "^7.0.2",
     "sass": "^1.70.0",
     "semantic-release": "^23.0.5",
@@ -16,5 +17,173 @@
     "web:preview": "vitepress preview",
     "ebook:build": "find src/ -type f -name \"*.md\" ! -path \"src/index.md\" -exec sed -i \"/^---$/,/^---$/d\" {} \\; && mdbook build && mkdir book/mobi/ && ebook-convert book/epub/药娘的天空.epub book/mobi/药娘的天空.mobi",
     "build": "npm run web:build && npm run ebook:build"
+  },
+  "release": {
+    "branches": [
+      {
+        "name": "main",
+        "prerelease": true
+      },
+      {
+        "name": "release",
+        "prerelease": false
+      }
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "breaking": true,
+              "release": "major"
+            },
+            {
+              "revert": true,
+              "release": "patch"
+            },
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "refactor",
+              "release": "patch"
+            },
+            {
+              "type": "style",
+              "release": "patch"
+            },
+            {
+              "type": "typo",
+              "release": "patch"
+            },
+            {
+              "type": "grammar",
+              "release": "patch"
+            },
+            {
+              "type": "ambig",
+              "release": "patch"
+            },
+            {
+              "type": "punctua",
+              "release": "patch"
+            },
+            {
+              "type": "chore",
+              "release": "patch"
+            },
+            {
+              "type": "ci",
+              "release": "patch"
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "特性新增",
+                "hidden": false
+              },
+              {
+                "type": "fix",
+                "section": "问题修复",
+                "hidden": false
+              },
+              {
+                "type": "refactor",
+                "section": "代码重构",
+                "hidden": false
+              },
+              {
+                "type": "style",
+                "section": "样式改进",
+                "hidden": false
+              },
+              {
+                "type": "typo",
+                "section": "错别字校正",
+                "hidden": false
+              },
+              {
+                "type": "grammar",
+                "section": "语法修正",
+                "hidden": false
+              },
+              {
+                "type": "ambig",
+                "section": "歧义消除",
+                "hidden": false
+              },
+              {
+                "type": "punctua",
+                "section": "标点规范",
+                "hidden": false
+              },
+              {
+                "type": "chore",
+                "section": "杂务",
+                "hidden": false
+              },
+              {
+                "type": "ci",
+                "section": "持续集成",
+                "hidden": true
+              },
+              {
+                "type": "revert",
+                "section": "恢复提交",
+                "hidden": false
+              }
+            ]
+          }
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "book/epub/*.epub",
+              "name": "transky-${nextRelease.version}.epub"
+            },
+            {
+              "path": "book/mobi/*.mobi",
+              "name": "transky-${nextRelease.version}.mobi"
+            },
+            {
+              "path": "book/typst-pdf/*.pdf",
+              "name": "transky-${nextRelease.version}.pdf"
+            }
+          ],
+          "successComment": false,
+          "failComment": false
+        }
+      ],
+      [
+        "@saithodev/semantic-release-backmerge",
+        {
+          "backmergeBranches": [
+            {
+              "from": "release",
+              "to": "main"
+            }
+          ],
+          "mergeMode": "ours"
+        }
+      ]
+    ]
   }
 }

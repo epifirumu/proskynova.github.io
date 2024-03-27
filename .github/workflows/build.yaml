@@ -2,9 +2,15 @@ name: Build and publish
 
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: 发布 Release
+        required: true
+        type: boolean
   push:
     branches:
       - "main"
+      - "release"
     paths:
       - ".github/**"
       - ".vitepress/**"
@@ -99,6 +105,27 @@ jobs:
         run: |
           sed -e "s/BUILD_TIME/$(TZ=Asia/Shanghai date -Isecond)/" -e "s/COMMIT_SHA/${{ github.sha }}/" -i src/about.md
           npm run build
+          mv book/epub/药娘的天空.epub book/epub/transky-${{ github.sha }}.epub
+          mv book/mobi/药娘的天空.mobi book/mobi/transky-${{ github.sha }}.mobi
+          mv book/typst-pdf/药娘的天空.pdf book/typst-pdf/transky-${{ github.sha }}.pdf
+
+      - name: Upload EPUB
+        uses: actions/upload-artifact@v4
+        with:
+          name: epub
+          path: book/epub/transky-*.epub
+
+      - name: Upload MOBI
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobi
+          path: book/mobi/transky-*.mobi
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf
+          path: book/typst-pdf/transky-*.pdf
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -110,6 +137,7 @@ jobs:
           wranglerVersion: 3
 
       - name: Release eBook
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.release) || ! (github.event_name == 'push' && contains(github.event.head_commit.message, '[skip release]')) }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: npx semantic-release
