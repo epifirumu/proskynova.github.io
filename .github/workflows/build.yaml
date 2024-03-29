@@ -66,30 +66,39 @@ jobs:
           crate: mdbook-typst-pdf
           git: https://github.com/KaiserY/mdbook-typst-pdf
 
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
       - name: Install fonts
         run: |
-          mkdir -p ~/.local/share/fonts/
-          curl -sL -o Noto_Sans.zip https://fonts.google.com/download?family=Noto%20Sans
-          unzip Noto_Sans.zip -d ~/.local/share/fonts/Noto_Sans
-          curl -sL -o Noto_Sans_SC.zip https://fonts.google.com/download?family=Noto%20Sans%20SC
-          unzip Noto_Sans_SC.zip -d ~/.local/share/fonts/Noto_Sans_SC
-          curl -sL -o Noto_Sans_Mono.zip https://fonts.google.com/download?family=Noto%20Sans%20Mono
-          unzip Noto_Sans_Mono.zip -d ~/.local/share/fonts/Noto_Sans_Mono
-          rm -fv ~/.local/share/fonts/Noto_Sans_Mono/NotoSansMono-VariableFont_wdth,wght.ttf
-          curl -sL -o Noto_Sans_KR.zip https://fonts.google.com/download?family=Noto%20Sans%20KR
-          unzip Noto_Sans_KR.zip -d ~/.local/share/fonts/Noto_Sans_KR
-          curl -sL -o Noto_Sans_Thai.zip https://fonts.google.com/download?family=Noto%20Sans%20Thai
-          unzip Noto_Sans_Thai.zip -d ~/.local/share/fonts/Noto_Sans_Thai
-          rm -fv ~/.local/share/fonts/Noto_Sans_Thai/NotoSansThai-VariableFont_wdth,wght.ttf
-          curl -sL -o Noto_Sans_Arabic.zip https://fonts.google.com/download?family=Noto%20Sans%20Arabic
-          unzip Noto_Sans_Arabic.zip -d ~/.local/share/fonts/Noto_Sans_Arabic
-          curl -sL -o Noto_Sans_Hebrew.zip https://fonts.google.com/download?family=Noto%20Sans%20Hebrew
-          unzip Noto_Sans_Hebrew.zip -d ~/.local/share/fonts/Noto_Sans_Hebrew
-          curl -sL -o Noto_Sans_Devanagari.zip https://fonts.google.com/download?family=Noto%20Sans%20Devanagari
-          unzip Noto_Sans_Devanagari.zip -d ~/.local/share/fonts/Noto_Sans_Devanagari
-          rm -fv ~/.local/share/fonts/Noto_Sans_Devanagari/NotoSansDevanagari-VariableFont_wdth,wght.ttf
-          curl -sL -o Noto_Emoji.zip https://fonts.google.com/download?family=Noto%20Emoji
-          unzip Noto_Emoji.zip -d ~/.local/share/fonts/Noto_Emoji
+          echo | python<<EOF
+          import requests
+          import json
+          import os
+          from pathlib import Path
+          import urllib.parse
+          def fetch_file(url, path, file_name):
+              file_path = os.path.join(path, file_name)
+              response = requests.get(url)
+              response.raise_for_status()
+              if not os.path.exists(os.path.dirname(file_path)):
+                  Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
+              with open(file_path, 'wb') as f:
+                  f.write(response.content)
+          def download_google_fonts(font_family, base_path):
+              json_response = requests.get("https://fonts.google.com/download/list?family=" + urllib.parse.quote_plus(font_family)).text.splitlines()[1:]
+              json_data = json.loads("".join(json_response))
+              for file in json_data['manifest']['fileRefs']:
+                  fetch_file(file['url'], os.path.join(base_path, font_family.replace(' ', "_")), file['filename'])
+          for font in ["Noto Sans", "Noto Sans SC", "Noto Sans Mono", "Noto Sans KR", "Noto Sans Thai", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Emoji"]:
+              download_google_fonts(font,  os.path.expanduser('~') +  "/.local/share/fonts/")
+              print("Font family " + font + " downloaded successfully.")
+          EOF
           curl -sL -o times_sans_serif.zip https://dl.dafont.com/dl/?f=times_sans_serif
           unzip times_sans_serif.zip -d ~/.local/share/fonts/times_sans_serif
           fc-cache -rv
