@@ -141,7 +141,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PAGES_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_PAGES_ACCOUNT }}
-          projectName: proskynova-github-io
+          projectName: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
           directory: .vitepress/dist/
           wranglerVersion: 3
 
